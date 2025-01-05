@@ -1,0 +1,29 @@
+---
+- name: Install and start httpd on different servers
+  hosts: all
+  become: true
+  tasks:
+    - name: Install httpd on Ubuntu and Debian
+      apt:
+        name: apache2
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install httpd on AlmaLinux
+      dnf:
+        name: httpd 
+        state: present
+      when: ansible_os_family == 'RedHat'
+         
+    - name: Start apache2 using command
+      command: apache2ctl start
+      args:
+        creates: /var/run/apache2/apache2.pid
+      when: ansible_os_family == 'Debian'
+
+    - name: Start and enable httpd on AlmaLinux 
+      service:
+        name: httpd 
+        state: started
+        enabled: true
+      when: ansible_os_family == 'RedHat'
