@@ -1,29 +1,81 @@
 ---
-- name: Install and start httpd on different servers
+- name: Install and configure LAMP stack on different servers
   hosts: all
   become: true
-  tasks:
-    - name: Install httpd on Ubuntu and Debian
-      apt:
-        name: apache2
-        state: present
-      when: ansible_os_family == 'Debian'
 
-    - name: Install httpd on AlmaLinux
-      dnf:
-        name: httpd 
-        state: present
-      when: ansible_os_family == 'RedHat'
-         
-    - name: Start apache2 using command
-      command: apache2ctl start
-      args:
-        creates: /var/run/apache2/apache2.pid
-      when: ansible_os_family == 'Debian'
+  # Install Apache
+  - name: Install httpd on Ubuntu and Debian
+    apt:
+      name: apache2
+      state: present
+    when: ansible_os_family == 'Debian'
 
-    - name: Start and enable httpd on AlmaLinux 
-      service:
-        name: httpd 
-        state: started
-        enabled: true
-      when: ansible_os_family == 'RedHat'
+  - name: Install httpd on AlmaLinux
+    dnf:
+      name: httpd
+      state: present
+    when: ansible_os_family == 'RedHat'
+
+  # Install MySQL
+  - name: Install MySQL on Ubuntu and Debian
+    apt:
+      name: mysql-server
+      state: present
+    when: ansible_os_family == 'Debian'
+
+  - name: Install MySQL on AlmaLinux
+    dnf:
+      name: mariadb-server
+      state: present
+    when: ansible_os_family == 'RedHat'
+
+  # Configure MySQL
+  - name: Create a MySQL root password
+    mysql_connection:
+      connection_type: 'unix_socket'
+      name: 'mysql'
+      execute: 'CREATE USER root@localhost IDENTIFIED BY '
+      options: '--show-password'
+
+  - name: Secure MySQL installation
+    mysql_connection:
+      connection_type: 'unix_socket'
+      name: 'mysql'
+      execute: "UPDATE mysql.user SET user_password=PASSWORD('new_password') WHERE user='root' AND host='localhost';"
+
+  - name: Grant remote access to MySQL
+    mysql_connection:
+      connection_type: 'unix_socket'
+      name: 'mysql'
+      execute: "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'new_password';"
+
+  # Install PHP
+  - name: Install PHP on Ubuntu and Debian
+    apt:
+      name: php
+      state: present
+    when: ansible_os_family == 'Debian'
+
+  - name: Install PHP on AlmaLinux
+    dnf:
+      name: php
+      state: present
+    when: ansible_os_family == 'RedHat'
+
+  # Configure PHP
+  - name: Enable PHP modules
+    shell: php -m | grep -v 'mcrypt' > /dev/null
+
+  # Start and enable Apache
+  - name: Start apache2 using command
+    command: apache2ctl start
+    args:
+      creates: /var/run/apache2/apache2.pid
+    when: ansible_os_family == 'Debian'
+
+  - name: Start and enable httpd on AlmaLinux
+    service:
+      name: httpd
+      state: started
+      enabled: true
+    when: ansible_os_family == 'RedHat'
