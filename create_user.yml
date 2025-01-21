@@ -1,14 +1,48 @@
 ---
-
 - hosts: all
+  become: yes
   tasks:
-
     - name: Create a user account
       ansible.builtin.user:
-        name: dana
-        groups: dev
+        name: pirlo
+        create_home: yes
         shell: /bin/bash
         comment: The best one
-        state: present      
+        state: present
 
+    - name: Create pirlo group
+      ansible.builtin.group:
+        name: pirlo
+        state: present
 
+    - name: Add user to pirlo group
+      ansible.builtin.user:
+        name: pirlo
+        groups: pirlo
+        append: yes
+
+    - name: Ensure .ssh directory exists
+      ansible.builtin.file:
+        path: /home/pirlo/.ssh
+        state: directory
+        mode: '0700'
+        owner: pirlo
+        group: pirlo
+
+    - name: Add ssh key for pirlo
+      ansible.builtin.lineinfile:
+        path: /home/pirlo/.ssh/authorized_keys
+        create: yes
+        line: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINEVxzOkeK0bvsmLdTvwJTDfZJj0/q3MAc/E18R8b4hf ansible"
+        owner: pirlo
+        group: pirlo
+        mode: '0600'
+
+    - name: Add sudoers file for pirlo
+      ansible.builtin.copy:
+        src: sudoer_pirlo
+        dest: /etc/sudoers.d/pirlo
+        owner: root
+        group: root
+        mode: '0440'
+        validate: /usr/sbin/visudo -cf %s
