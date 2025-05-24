@@ -1,0 +1,9 @@
+- name: Add ssh key for divail
+  ansible.builtin.lineinfile:
+    path: /home/divail/.ssh/authorized_keys
+    create: yes
+    line: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINEVxzOkeK0bvsmLdTvwJTDfZJj0/q3MAc/E18R8b4hf ansible"
+    owner: divail
+    group: divail
+    mode: '0600'
+

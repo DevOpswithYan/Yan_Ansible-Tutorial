@@ -1,0 +1,16 @@
+# roles/linode_servers/tasks/main.yml
+- name: Install httpd and php on docker servers
+  tags: apache, apache2, ubuntu
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Start apache2 in Docker container (Debian)
+  tags: apache2, debian, docker
+  command: apache2ctl start
+  args:
+    creates: /var/run/apache2/apache2.pid
+  when: ansible_os_family == 'Debian'

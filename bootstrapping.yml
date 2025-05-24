@@ -35,6 +35,16 @@
         group: divail
         mode: '0600'
         
+
+    - name: Ensure /etc/sudoers.d directory exists
+      ansible.builtin.file:
+        path: /etc/sudoers.d
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+
     - name: Add sudoers file for divail
       ansible.builtin.copy:
         src: sudoer_divail

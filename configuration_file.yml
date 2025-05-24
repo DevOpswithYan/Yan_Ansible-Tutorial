@@ -1,5 +1,4 @@
 ---
-# First play for updates
 - hosts: all
   become: true
   pre_tasks:
@@ -18,53 +17,17 @@
         update_cache: yes
       when: ansible_os_family == 'RedHat'
       ignore_errors: yes
-
-# Second play for web server installation
-- name: Install and start httpd on different servers
-  hosts: all
+- hosts: all
   become: true
-  ignore_errors: yes
-  tasks:
-    - name: Install httpd and php on docker servers
-      tags: apache, apache2, ubuntu
-      apt:
-        name: 
-          - apache2
-          - libapache2-mod-php
-        state: present
-      when: ansible_os_family == 'Debian'
+  roles:
+    - base
 
-    - name: Install httpd on AlmaLinux
-      tags: httpd, almalinux
-      dnf:
-        name:
-          - httpd
-          - php
-        state: present
-      when: ansible_os_family == 'RedHat'
+- hosts: container_servers
+  become: true
+  roles:
+    - container_servers
 
-    - name: Copy ymk website
-      tags: apache, apache2, httpd
-      copy:
-        src: default_site.html
-        dest: /var/www/html/
-        owner: root
-        group: root
-        mode: 0644
-
-
-    - name: Start apache2 in Docker container (Debian)
-      tags: apache2, debian, docker
-      command: apache2ctl start
-      args:
-        creates: /var/run/apache2/apache2.pid
-      when: ansible_os_family == 'Debian'
-
-
-    - name: Start and enable httpd on AlmaLinux (non-Docker)
-      tags: httpd, redhat
-      service:
-        name: httpd
-        state: started
-        enabled: true
-      when: ansible_os_family == 'RedHat'
+- hosts: linode_servers
+  become: true
+  roles:
+    - linode_servers

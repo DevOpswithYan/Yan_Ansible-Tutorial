@@ -1,0 +1,8 @@
+- name: Install httpd and php on docker servers
+  tags: apache, apache2, ubuntu
+  apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+    state: present
+
